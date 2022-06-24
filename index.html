@@ -482,7 +482,7 @@
 
         async getBodySizes () {
           const standard = this.bodyFilter.standard.value.toLowerCase();
-          const type = this.bodyFilter.type.value;
+          const type = this.bodyFilter.type.value.toLowerCase();
           const result = await fetch(`./assets/${standard}-${type}-sizes.json`);
           return await result.json();
         },
