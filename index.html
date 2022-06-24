@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Подбор типовой фигуры</title>
+  <link href="assets/bodysize.css" rel="stylesheet">
+  <script src="assets/vue3.js"></script>
+  <script src="assets/mr-fontfit.js"></script>
+</head>
+<body>
+
+  <div id="bodysize">
+    <header class="app-header">
+      <div class="edit-person">
+        <!-- Имя -->
+        <h1
+          class="edit-person__name"
+          contenteditable
+          spellcheck="false"
+          ref="name"
+          @input="onUserInput('name')">{{ userName }}</h1>
+        <div class="edit-person__sizes">
+          <!-- Рост -->
+          <div class="edit-person__size" @click="$refs.height.focus()">Рост <span
+            class="edit-person__size-value"
+            contenteditable
+            spellcheck="false"
+            ref="height"
+            @input="onUserInput('height')">{{ userSizesMap['HEIGHT']?.value || 0 }}</span></div>
+          <!-- Грудь -->
+          <div class="edit-person__size" @click="$refs.chest.focus()">Грудь <span
+            class="edit-person__size-value"
+            contenteditable
+            spellcheck="false"
+            ref="chest"
+            @input="onUserInput('chest')">{{ userSizesMap['CHEST']?.value || 0 }}</span></div>
+          <!-- Талия -->
+          <div class="edit-person__size" @click="$refs.waist.focus()">Талия <span
+            class="edit-person__size-value"
+            contenteditable
+            spellcheck="false"
+            ref="waist"
+            @input="onUserInput('waist')">{{ userSizesMap['WAIST']?.value || 0 }}</span></div>
+          <!-- Бедра -->
+          <div class="edit-person__size" @click="$refs.hip.focus()">Бедра <span
+            class="edit-person__size-value"
+            contenteditable
+            spellcheck="false"
+            ref="hip"
+            @input="onUserInput('hip')">{{ userSizesMap['HIP']?.value || 0 }}</span></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+    </header>
+
+    <!-- Фильтр типовых фигур -->
+    <nav class="body-filter">
+      <div class="body-filter__group" data-fontfit>
+        Типовая
+        <body-filter-select
+          :options="bodyFilter.type.options"
+          :value="bodyFilter.type.value"
+          @select="onSetFilter('type', $event)">
+        </body-filter-select>
+        фигура по ключевым признакам
+      </div>
+      <div class="body-filter__group" data-fontfit>
+        <template v-for="(sizeKey, index) in bodyFilterSizeKeys">
+          <span class="body-filter__size-key-delimiter" v-if="index > 0"> &middot; </span>
+          <span class="body-filter__size-key-label">
+            {{ filterCapitalize(bodyFilter.sizeKeys[sizeKey].label) }}
+          </span>
+          <body-filter-select
+            v-if="bodyFilter.sizeKeys[sizeKey].value"
+            :options="bodyFilterOptions[sizeKey]"
+            :value="bodyFilter.sizeKeys[sizeKey].value"
+            @select="onSetFilter(sizeKey, $event)">
+          </body-filter-select>
+        </template>
+      </div>
+    </nav>
+
+    <div class="scroll">
+      <!-- Выбранная типовая фигура -->
+      <main class="body-size" :class="[
+        bodyFilter.standard.value.toLowerCase(),
+        bodyFilter.type.value?.toLowerCase()
+      ]">
+        <!-- Группы размеров -->
+        <ul
+          class="body-size__group"
+          v-for="(sizeGroup, index) in sizeGroups[bodyFilter.type.value]"
+          :key="index"
+          :class="['group' + (index + 1)]">
+          <li>
+            <div class="body-size__group-key-header">
+              Признак<br>с
+              <strong>{{ sizeGroup.from }}</strong> по
+              <strong>{{ sizeGroup.to }}</strong>
+            </div>
+            <div class="body-size__group-value-header">Величина</div>
+          </li>
+          <li
+            v-for="size in (sizeGroup.to - sizeGroup.from + 1)"
+            :class="{
+              'body-size__group-item_filtered': filteredSizeKeys.includes(
+                sizeGroup.from + size - 1
+              )
+            }">
+            <div class="body-size__group-item-key">
+              <span class="size-title">
+                {{ filterCapitalize(filterSizeTitle(sizeGroup.from + size - 1)) }}
+              </span>
+              <span class="size-key">{{ sizeGroup.from + size - 1 }}</span>
+            </div>
+            <div class="body-size__group-item-value">
+              {{ filteredBody[sizeGroup.from + size - 2] || '' }}
+            </div>
+          </li>
+        </ul>
+      </main>
+    </div>
+
+    <!-- Помощь -->
+    <section class="app-help">
+      <h3>Как пользоваться – неочевидное</h3>
+      <p>1<br>Имя и реальные размеры человека (справа от имени)<br>можно редактировать прямо на странице.</p>
+      <p>2<br>Все изменения на странице сохраняются в ссылке, <br>поэтому ее можно использовать как закладку.</p>
+    </section>
+
+    <!-- Подвал -->
+    <footer class="app-footer">
+      <div class="app-footer__title">Подбор типовой фигуры</div>
+      <div class="app-footer__motto">Сделано в России, ГОСТ 1972 г.</div>
+      <img src="assets/bear.png" class="app-footer__mascot">
+    </footer>
+  </div>
+
+  <script type="module">
+    import BodyFilterSelect from './assets/body-filter-select.js';
+    const FEMALE_NAMES = ["София", "Мария", "Анна", "Виктория", "Алиса", "Полина", "Анастасия", "Елизавета", "Александра", "Варвара", "Дарья", "Екатерина", "Ева", "Ксения", "Арина", "Василиса", "Вероника", "Милана", "Валерия", "Кира", "Ульяна", "Вера", "Софья", "Таисия", "Мирослава", "Маргарита", "Алина", "Алена", "Амина", "Кристина", "Диана", "Есения", "Ольга", "Юлия", "Эмилия", "Сафия", "Стефания", "Майя", "Ангелина", "Евгения", "Яна", "Татьяна", "Агата", "Ника", "Злата", "Марьям", "Аделина", "Мия", "Николь", "Елена", "Ирина", "Амелия", "Ясмина", "Дарина", "Надежда", "Алия", "Элина", "Аиша", "Оливия", "Нина", "Фатима", "Марина", "Милена", "Ярослава", "Ариана", "Светлана", "Айлин", "Самира", "Амира", "Зоя", "Мадина", "Любовь", "Малика", "Аврора", "Мира", "Раяна", "Агния", "Лидия", "Камилла", "Карина", "Лилия", "Антонина", "Олеся", "Наталья", "Серафима", "Марьяна", "Каролина", "Мелания", "Мила", "Асия", "Камила", "Марта", "Марианна", "Лейла", "Сабина", "Амалия", "Эмма", "Владислава", "Теона", "Алисия", "Айша", "Лея", "Валентина", "Аглая", "Альфия", "Сумая", "Салиха", "Эвелина", "Хадиджа", "Евдокия", "Евангелина", "Медина", "Мелисса", "Пелагея", "Муслима", "Тамара", "Альбина", "Адель", "Лада", "Сара", "Аделя", "Аниса", "Дария", "Виолетта", "Анфиса", "Афина", "Лиана", "Лия", "Анжелика", "Моника", "Регина", "Анисия", "Алеся", "Хадижа", "Аяна", "Юлиана", "Мариям", "Алла", "Арууке", "Хадича", "Дана", "Влада", "Наталия", "Мишель", "Ясина", "Азалия", "Людмила", "Сабрина", "Станислава", "Василина", "Аруузат", "Нелли", "Адриана", "Алсу", "Даниэла", "Изабелла", "Марям", "Милослава", "Марфа", "Мариам", "Арианна", "Тея", "Эмили", "Зарина", "Ася", "Виталина", "Жасмин", "Сумайя", "Дина", "Белла", "Доминика", "Луиза", "Галина", "Жасмина", "Саида", "Ани", "Айла", "Мирра", "Катерина", "Сафина", "Фотима", "Снежана", "Элиза", "Миа", "Айбийке", "Наима", "Лина", "Ясмин", "Зайнаб", "Салима", "Соня", "Элеонора", "Аида", "Глафира", "Аксинья", "Рада", "Мария ", "Луна", "Златослава"];
+    const SIZE_KEY = {
+      HEIGHT: 1,
+      CHEST: 16,
+      WAIST: 18,
+      HIP: 19,
+      1: 'HEIGHT',
+      16: 'CHEST',
+      18: 'WAIST',
+      19: 'HIP'
+    };
+    const BODY_TYPE = { MALE: 'MALE', FEMALE: 'FEMALE' };
+    const STANDARD = { GOST1972: 'GOST1972' };
+    // Сокращения
+    const HEIGHT = SIZE_KEY[SIZE_KEY.HEIGHT];
+    const CHEST = SIZE_KEY[SIZE_KEY.CHEST];
+    const WAIST = SIZE_KEY[SIZE_KEY.WAIST];
+    const HIP = SIZE_KEY[SIZE_KEY.HIP];
+    const MALE = BODY_TYPE.MALE;
+    const FEMALE = BODY_TYPE.FEMALE;
+    const GOST1972 = STANDARD.GOST1972;
+
+    Vue.createApp({
+      components: {
+        BodyFilterSelect
+      },
+      data () {
+        return {
+          bodyFilter: {
+            standard: {
+              options: [GOST1972],
+              value: GOST1972
+            },
+            type: {
+              options: [
+                { value: FEMALE, label: 'женская'},
+                { value: MALE, label: 'мужская'},
+              ],
+              value: null
+            },
+            sizeKeys: {
+              [HEIGHT]: {
+                label: 'рост',
+                options: [],
+                value: null
+              },
+              [CHEST]: {
+                label: 'грудь',
+                options: [],
+                value: null
+              },
+              [WAIST]: {
+                label: 'талия',
+                options: [],
+                value: null
+              },
+              [HIP]: {
+                label: 'бедра',
+                options: [],
+                value: null
+              },
+            }
+          },
+          sizeGroups: {
+            [MALE]: [
+              { from: 1, to: 12 },
+              { from: 13, to: 19 },
+              { from: 20, to: 27 },
+              { from: 28, to: 38 },
+              { from: 39, to: 44 },
+              { from: 45, to: 48 },
+              { from: 49, to: 50 },
+              { from: 51, to: 58 },
+            ],
+            [FEMALE]: [
+              { from: 1, to: 12 },
+              { from: 13, to: 19 },
+              { from: 20, to: 27 },
+              { from: 28, to: 38 },
+              { from: 39, to: 44 },
+              { from: 45, to: 48 },
+              { from: 49, to: 50 },
+              { from: 51, to: 58 },
+            ]
+          },
+          bodySizes: {},
+          location: `${location.protocol}//${location.host}${location.pathname}`
+        };
+      },
+      computed: {
+        bodyFilterSizeKeys () {
+          return Object.keys(this.bodyFilter.sizeKeys);
+        },
+        bodyFilterOptions () {
+          return {
+            [HEIGHT]: Object.keys(
+              this.bodySizes?.[HEIGHT] || {}
+            ).map(i => ({ value: Number(i), label: String(i) })),
+            [CHEST]: Object.keys(
+              this.bodySizes?.[HEIGHT]?.[
+                this.bodyFilter.sizeKeys[HEIGHT].value || 0
+              ]?.[CHEST] || {}
+            ).map(i => ({ value: Number(i), label: String(i) })),
+            [WAIST]: Object.keys(
+              this.bodySizes?.[HEIGHT]?.[
+                this.bodyFilter.sizeKeys[HEIGHT].value || 0
+              ]?.[CHEST]?.[
+                this.bodyFilter.sizeKeys[CHEST].value || 0
+              ]?.[WAIST] || {}
+            )
+              .sort((a, b) => (a - b))
+              .map(i => ({ value: Number(i), label: String(i) })),
+            [HIP]: Object.keys(
+              this.bodySizes?.[HEIGHT]?.[
+                this.bodyFilter.sizeKeys[HEIGHT].value || 0
+              ]?.[CHEST]?.[
+                this.bodyFilter.sizeKeys[CHEST].value || 0
+              ]?.[HIP] || {}
+            )
+              .sort((a, b) => (a - b))
+              .map(i => ({ value: Number(i), label: String(i) }))
+          };
+        },
+        filteredBody () {
+          return this.bodySizes[HEIGHT]?.[
+            this.bodyFilter.sizeKeys[HEIGHT].value
+          ]?.[CHEST]?.[
+            this.bodyFilter.sizeKeys[CHEST].value
+          ]?.[WAIST]?.[
+            this.bodyFilter.sizeKeys[WAIST].value
+          ]?.list[0] || [];
+        },
+        filteredSizeKeys () {
+          return this.bodyFilterSizeKeys.map(key => SIZE_KEY[key]);
+        },
+        userName () {
+          return new URLSearchParams(location.search).get('name') || 'Мария Неизмеренная';
+        },
+        savedUserType () {
+          return new URLSearchParams(location.search).get('setType') || FEMALE;
+        },
+        userSizes () {
+          const params = new URLSearchParams(location.search);
+          return this.bodyFilterSizeKeys.map(key => {
+            if (params.get(key) || params.get(key.toLowerCase())) {
+              return {
+                key,
+                label: this.bodyFilter.sizeKeys[key].label,
+                value: Number(params.get(key) || params.get(key.toLowerCase()))
+              };
+            }
+          }).filter(item => item);
+        },
+        userSizesMap () {
+          return this.userSizes.reduce((map, { key, value, label }) => {
+            map[key] = { value, label, key };
+            return map;
+          }, {});
+        },
+        savedBodySizesMap () {
+          const params = new URLSearchParams(location.search);
+          return this.bodyFilterSizeKeys.map(key => {
+            const setKey = `set${this.filterCapitalize(key)}`;
+            if (params.get(setKey)) {
+              return {
+                key,
+                label: this.bodyFilter.sizeKeys[key].label,
+                value: Number(params.get(setKey))
+              };
+            }
+          }).filter(item => item).reduce((map, { key, value, label }) => {
+            map[key] = { value, label, key };
+            return map;
+          }, {});
+        },
+        exampleServiceUrl () {
+          return this.exampleServiceUrlHtmlLabel.replace(/<\/?strong>/g, '');
+        },
+        exampleServiceUrlHtmlLabel () {
+          return `${this.location}?<strong>type</strong>=male&<strong>height</strong>=187&<strong>chest</strong>=96&<strong>waist</strong>=90&<strong>hip</strong>=100&<strong>name</strong>=Виталий Кулешин`
+        }
+      },
+      async created () {
+        await this.findAndSetBodySize({
+          type: this.savedUserType?.toUpperCase() || FEMALE,
+          sizeKeys: {
+            HEIGHT: this.savedBodySizesMap[HEIGHT]?.value || this.userSizesMap[HEIGHT]?.value,
+            CHEST: this.savedBodySizesMap[CHEST]?.value || this.userSizesMap[CHEST]?.value,
+            WAIST: this.savedBodySizesMap[WAIST]?.value || this.userSizesMap[WAIST]?.value,
+            HIP: this.savedBodySizesMap[HIP]?.value || this.userSizesMap[HIP]?.value
+          }
+        });
+      },
+      methods: {
+
+        //
+        // Фильтры
+        //
+
+        async onSetFilter (filter, value) {
+          const keyOrder = [HEIGHT, CHEST, WAIST, HIP];
+          if (filter === 'type' && this.bodyFilter['type'].value !== value) {
+            this.bodyFilter['type'].value = value;
+            this.setUrlParam('setType', value.toLowerCase()); // сохранить в URL
+            this.bodySizes = this.mapByFilterSizeKeys(await this.getBodySizes());
+            keyOrder.slice(keyOrder.indexOf(filter) + 1).forEach(key => {
+              this.bodyFilter.sizeKeys[key].value = this.bodyFilterOptions[key][0].value;
+              this.setUrlParam(
+                `set${this.filterCapitalize(key)}`,
+                this.bodyFilter.sizeKeys[key].value
+              ); // сохранить в URL
+            });
+          } else if (filter === HEIGHT || filter === CHEST) {
+            this.bodyFilter.sizeKeys[filter].value = value;
+            this.setUrlParam(`set${this.filterCapitalize(filter)}`, value); // сохранить в URL
+            keyOrder.slice(keyOrder.indexOf(filter) + 1).forEach(key => {
+              this.bodyFilter.sizeKeys[key].value = this.bodyFilterOptions[key][0].value;
+              this.setUrlParam(
+                `set${this.filterCapitalize(key)}`,
+                this.bodyFilter.sizeKeys[key].value
+              ); // сохранить в URL
+            });
+          } else if (filter === WAIST) {
+            this.bodyFilter.sizeKeys[filter].value = value;
+            this.bodyFilter.sizeKeys[HIP].value = this.bodySizes[HEIGHT][
+              this.bodyFilter.sizeKeys[HEIGHT].value
+            ][CHEST][
+              this.bodyFilter.sizeKeys[CHEST].value
+            ][WAIST][value].list[0][SIZE_KEY.HIP - 1];
+            this.setUrlParam(`set${this.filterCapitalize(filter)}`, value); // сохранить в URL
+            this.setUrlParam('setHip', this.bodyFilter.sizeKeys[HIP].value); // сохранить в URL
+          } else if (filter === HIP) {
+            this.bodyFilter.sizeKeys[filter].value = value;
+            this.bodyFilter.sizeKeys[WAIST].value = this.bodySizes[HEIGHT][
+              this.bodyFilter.sizeKeys[HEIGHT].value
+            ][CHEST][
+              this.bodyFilter.sizeKeys[CHEST].value
+            ][HIP][value].list[0][SIZE_KEY.WAIST - 1];
+            this.setUrlParam(`set${this.filterCapitalize(filter)}`, value); // сохранить в URL
+            this.setUrlParam('setWaist', this.bodyFilter.sizeKeys[WAIST].value); // сохранить в URL
+          }
+
+          this.updateFontfit();
+        },
+        mapByFilterSizeKeys (list) {
+          const map = { list };
+          // По росту
+          map[HEIGHT] = this.mapBySizeKey(
+            map.list,
+            SIZE_KEY.HEIGHT - 1
+          );
+          // По груди каждого роста
+          Object.keys(map[HEIGHT]).forEach(height => {
+            map[HEIGHT][height][CHEST] = this.mapBySizeKey(
+              map[HEIGHT][height].list,
+              SIZE_KEY.CHEST - 1
+            );
+            // По талии и бедрам каждой груди
+            Object.keys(map[HEIGHT][height][CHEST]).forEach(chest => {
+              map[HEIGHT][height][CHEST][chest][WAIST] = this.mapBySizeKey(
+                map[HEIGHT][height][CHEST][chest].list,
+                SIZE_KEY.WAIST - 1
+              );
+              map[HEIGHT][height][CHEST][chest][HIP] = this.mapBySizeKey(
+                map[HEIGHT][height][CHEST][chest].list,
+                SIZE_KEY.HIP - 1
+              );
+            });
+          });
+          return map;
+        },
+        mapBySizeKey (list, keyIndex) {
+          return list.reduce((map, item) => {
+            map[item[keyIndex]] = map[item[keyIndex]] || { list: [] };
+            map[item[keyIndex]].list.push(item);
+            return map;
+          }, {});
+        },
+        async findBodySize (bodyFilter) {
+          // Загрузить размеры мужчин или женщин (или детей, особо полных и т.д.
+          // отдельные таблицы)
+          const setType = bodyFilter.type || MALE;
+          await this.onSetFilter('type', setType);
+          // Ищем по росту
+          const findHeight = Number(bodyFilter.sizeKeys[HEIGHT]);
+          const heightKeys = Object
+            .keys(this.bodySizes[HEIGHT])
+            .map(n => Number(n));
+          const setHeight = findHeight
+            ? heightKeys.find(n => n >= findHeight) || heightKeys.slice(-1)[0]
+            : heightKeys[0];
+          this.onSetFilter(HEIGHT, setHeight);
+
+          // Ищем по груди
+          const findChest = Number(bodyFilter.sizeKeys[CHEST]);
+          const chestKeys = Object
+            .keys(this.bodySizes[HEIGHT][setHeight][CHEST])
+            .map(n => Number(n));
+          const setChest = findChest
+            ? chestKeys.find(n => n >= findChest) || chestKeys.slice(-1)[0]
+            : chestKeys[0];
+
+          // Ищем по талии и бедрам
+          const findWaist = Number(bodyFilter.sizeKeys[WAIST]);
+          const waistKeys = Object
+            .keys(this.bodySizes[HEIGHT][setHeight][CHEST][setChest][WAIST])
+            .map(n => Number(n));
+          const setWaist = findWaist
+            ? waistKeys.find(n => n >= findWaist) || waistKeys.slice(-1)[0]
+            : waistKeys[0];
+
+          const findHip = Number(bodyFilter.sizeKeys[HIP]);
+          const hipKeys = Object
+            .keys(this.bodySizes[HEIGHT][setHeight][CHEST][setChest][HIP])
+            .map(n => Number(n));
+          const setHip = findHip
+            ? hipKeys.find(n => n >= findHip) || hipKeys.slice(-1)[0]
+            : hipKeys[0];
+
+          return {
+            type: setType,
+            sizeKeys: {
+              [HEIGHT]: setHeight,
+              [CHEST]: setChest,
+              [WAIST]: setWaist,
+              [HIP]: setHip
+            }
+          };
+        },
+        async findAndSetBodySize (bodyFilter) {
+          const foundBody = await this.findBodySize(bodyFilter);
+          await this.onSetFilter('type', foundBody.type);
+          for (let key of this.bodyFilterSizeKeys) {
+            await this.onSetFilter(key, foundBody.sizeKeys[key]);
+          }
+        },
+
+        //
+        // Загрузка данных
+        //
+
+        async getBodySizes () {
+          const standard = this.bodyFilter.standard.value.toLowerCase();
+          const type = this.bodyFilter.type.value;
+          const result = await fetch(`./assets/${standard}-${type}-sizes.json`);
+          return await result.json();
+        },
+
+        //
+        // Ввод данных пользователя
+        //
+
+         async onUserInput (field) {
+          let redoFindBody = false;
+          if (field === 'name') {
+            const fieldValue = this.$refs.name.textContent.trim();
+            const type = FEMALE_NAMES.some(femaleName => {
+              return fieldValue.match(new RegExp(`^${femaleName}`, 'i'));
+            }) ? FEMALE : MALE;
+            if (type !== this.bodyFilter.type.value) {
+              await this.onSetFilter('type', type);
+              redoFindBody = true;
+            }
+
+            clearTimeout(this.userNameTimeout);
+            this.userNameTimeout = setTimeout(() => {
+              this.setUrlParam('name', fieldValue);
+            }, 300);
+
+          } else if ([HEIGHT, CHEST, WAIST, HIP].includes(field.toUpperCase())) {
+            const fieldValue = Number(this.$refs[field].textContent);
+            this.setUrlParam(field, fieldValue, true);
+            redoFindBody = true;
+          }
+
+          if (redoFindBody) {
+            await this.findAndSetBodySize({
+              type: this.bodyFilter.type.value,
+              sizeKeys: [HEIGHT, CHEST, WAIST, HIP].reduce((map, key) => {
+                map[key] = Number(this.$refs[key.toLowerCase()].textContent);
+                return map;
+              }, {})
+            });
+          }
+        },
+
+        //
+        // Текстовые фильтры
+        //
+
+        filterCapitalize (value = '') {
+          return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+        },
+        filterSizeTitle (sizeKey) {
+          return this.bodyFilter.sizeKeys[SIZE_KEY[sizeKey]]?.label || '';
+        },
+
+        //
+        // Вспомогательное
+        //
+
+        updateFontfit () {
+          requestAnimationFrame(() => {
+            window.fontfit(document.querySelectorAll('[data-fontfit]'));
+          });
+        },
+        setUrlParam (name, data, doReplace) {
+          const params = new URLSearchParams(location.search);
+          params.set(name, data);
+          const url = new URL(location.href);
+          url.search = `?${params.toString()}`;
+          history[`${doReplace ? 'replace' : 'push'}State`]({
+            state: url.href
+          }, '', url.href);
+        },
+      }
+    }).mount('#bodysize');
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,332 @@
+html {
+  --color-app-text: #000000de;
+  --color-app-text-muted: #00000061;
+  --color-app-background: whitesmoke;
+  --color-app-link: steelblue;
+
+  --width-layout: 89em;
+  --width-article: 45rem;
+  --width-header: 45rem;
+}
+
+html {
+  font-size: 18px;
+}
+
+html, body {
+  font-family: "Leksa", sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--color-app-text);
+  background-color: var(--color-app-background);
+}
+
+body {
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 1rem;
+}
+
+h1 {
+  font-family: "Maecenas";
+  font-weight: 600;
+}
+
+a {
+  color: var(--color-app-link);
+  cursor: pointer;
+}
+
+strong {
+  font-weight: 600;
+}
+
+[contenteditable] {
+  outline: none;
+}
+
+.note {
+  font-size: smaller;
+  color: var(--color-app-text-muted);
+  padding-left: 2rem;
+  margin: 2rem auto;
+  line-height: 1.75;
+}
+
+.muted {
+  color: var(--color-app-text-muted);
+}
+
+.divider {
+  margin-top: 1rem;
+  border-bottom: solid 1px var(--color-app-text-muted);
+}
+
+/* Body Filter */
+
+.body-filter {
+  margin: 1rem auto 5rem auto;
+  width: 90%;
+  max-width: var(--width-article);
+  text-align: center;
+}
+
+.body-filter__size-key-label + .body-filter-select {
+  margin-left: 0.25em;
+}
+
+/* Body Filter Select */
+
+.body-filter-select {
+  position: relative;
+  color: var(--color-app-link);
+  font-weight: 500;
+}
+
+.body-filter-select select {
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  opacity: 0;
+  right: 0;
+  bottom: 0.5em;
+  cursor: pointer;
+}
+
+.body-filter-select:before {
+  content: '';
+  border-bottom: dashed 0.0625em var(--color-app-link);
+  position: absolute;
+  top: 1.25em;
+  width: 100%;
+  left: 0;
+  display: block;
+}
+
+/* Body Size */
+
+.body-size {
+  font-size: 14px;
+  width: var(--width-layout);
+  margin: 0rem auto 3rem auto;
+  position: relative;
+  font-weight: 300;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.body-size.gost1972.male {
+  background: url("gost1972-male-layout.png") center top / 100% auto no-repeat;
+  height: 125em;
+}
+
+.body-size.gost1972.female {
+  background: url("gost1972-female-layout.png") center top / 100% auto no-repeat;
+  height: 114em;
+}
+
+.body-size__group {
+  position: absolute;
+  width: 12em;
+  display: block;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.body-size__group li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1em;
+  line-height: 1.5;
+  margin-bottom: 0.125em;
+}
+
+.body-size__group-item-key,
+.body-size__group-key-header {
+  flex-basis: 49%;
+  text-align: right;
+}
+
+.body-size__group-item-value,
+.body-size__group-value-header {
+  flex-basis: 39%;
+  margin-left: 14%;
+}
+
+.body-size__group-item-value {
+  font-weight: bold;
+}
+
+.body-size__group-item-value:after {
+  content: " см";
+  font-weight: normal;
+}
+
+.body-size__group-item-value:empty:after {
+  content: "—";
+}
+
+.body-size__group-item-key .size-title {
+  margin-right: 1em;
+  font-weight: bold;
+}
+
+.body-size__group-item_filtered {
+  border-bottom: solid 1px var(--color-app-text-muted);
+}
+
+.body-size__group li:first-child {
+  margin-bottom: 0.75em;
+  align-items: flex-end;
+  color: var(--color-app-text-muted);
+}
+
+.body-size__group li:first-child strong {
+  color: var(--color-app-text);
+}
+
+.body-size.gost1972.male .group1 { left: 27em; top: 27em; }
+.body-size.gost1972.male .group2 { left: 43em; top: 5em; }
+.body-size.gost1972.male .group3 { left: 53em; top: 31em; }
+.body-size.gost1972.male .group4 { left: 11em; top: 56em; }
+.body-size.gost1972.male .group5 { left: 34em; top: 82em; }
+.body-size.gost1972.male .group6 { left: 54em; top: 59em; }
+.body-size.gost1972.male .group7 { left: 26em; top: 105em; }
+.body-size.gost1972.male .group8 { left: 52em; top: 102em; }
+.body-size.gost1972.female .group1 { left: 27em; top: 25em; }
+.body-size.gost1972.female .group2 { left: 46em; top: 4em; }
+.body-size.gost1972.female .group3 { left: 55em; top: 30em; }
+.body-size.gost1972.female .group4 { left: 12em; top: 54em; }
+.body-size.gost1972.female .group5 { left: 43em; top: 75em; }
+.body-size.gost1972.female .group6 { left: 53em; top: 57em; }
+.body-size.gost1972.female .group7 { left: 26em; top: 95em; }
+.body-size.gost1972.female .group8 { left: 51em; top: 93em; }
+
+/* User Sizes */
+
+.user-sizes {
+  font-style: italic;
+}
+
+.user-sizes__item:not(:last-child):after {
+  content: ', ';
+}
+
+/* Edit Person */
+
+.edit-person {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.edit-person__sizes {
+  text-align: right;
+  flex-basis: 9rem;
+  font-size: 1.125rem;
+}
+
+.edit-person__size {
+  cursor: pointer;
+}
+
+.edit-person__name {
+  text-align: left;
+  flex-basis: calc(100% - 9rem);
+  font-size: 4rem;
+  line-height: 1.125 !important;
+  margin: 0;
+  cursor: pointer;
+}
+
+.edit-person__size-value {
+  font-weight: 600;
+}
+
+.edit-person__name:focus,
+.edit-person__size-value:focus {
+  font-style: italic;
+  font-weight: bold;
+}
+
+@media (max-width: 960px) {
+  .edit-person__name {
+    font-size: 3rem;
+  }
+
+  .edit-person__sizes {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .edit-person__name {
+    font-size: 2rem;
+  }
+
+  .edit-person__sizes {
+    font-size: 0.75rem;
+  }
+}
+
+/* App Header */
+
+.app-header {
+  margin: 1rem auto 1rem auto;
+  width: 90%;
+  max-width: var(--width-header);
+  text-align: center;
+  position: relative;
+}
+
+/* App Footer */
+
+.app-footer {
+  margin: 12rem auto 1.5rem auto;
+  text-align: center;
+  width: var(--width-article);
+}
+
+.app-footer__title {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.app-footer__motto {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+}
+
+.app-footer__mascot {
+  margin-top: 0.75rem;
+  height: 3rem;
+  opacity: 0.75;
+}
+
+/* App Help */
+
+.app-help {
+  margin: 0rem auto;
+  width: 90%;
+  max-width: var(--width-article);
+  text-align: center;
+}
+
+.app-help-toggle {
+  position: absolute;
+  display: block;
+  left: calc(100% + 0.5rem);
+  top: 0rem;
+  font-size: 2rem;
+  font-weight: bold;
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  text-align: center;
+  cursor: pointer;
+  /*transform-origin: 0 0;*/
+  /*transform: rotate(-90deg) translate3d(-0%, 0%, 0);*/
+}
