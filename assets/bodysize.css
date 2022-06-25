@@ -1,3 +1,6 @@
+@import url("fonts/leksa.css");
+@import url("fonts/maecenas.css");
+
 html {
   --color-app-text: #000000de;
   --color-app-text-muted: #00000061;
@@ -14,7 +17,8 @@ html {
 }
 
 html, body {
-  font-family: "Leksa", sans-serif;
+  font-family: Leksa, Georgia, serif;
+  font-weight: normal;
   margin: 0;
   padding: 0;
   color: var(--color-app-text);
@@ -28,17 +32,12 @@ body {
 }
 
 h1 {
-  font-family: "Maecenas";
-  font-weight: 600;
+  font-family: Maecenas, Georgia, serif;
 }
 
 a {
   color: var(--color-app-link);
   cursor: pointer;
-}
-
-strong {
-  font-weight: 600;
 }
 
 [contenteditable] {
